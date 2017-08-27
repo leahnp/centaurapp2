@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Centaur: Ride</title>
+</head>
+<body>
+    <h1>You are riding</h1>
+    <a href="/">Back Home</a>
+    <!-- <a href="/stopRide">Stop Ride</a> -->
+    <form method="POST" action="/stopRide">
+        <input type="hidden" name="ride_id" value="{{ .}}"></input>
+        <input type="submit" value="Stop ride">
+      </form>
+    <h2>Ride id: {{ .}}</h2>
+</body>
+</html>

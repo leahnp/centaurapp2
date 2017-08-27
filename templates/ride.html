@@ -11,7 +11,7 @@
     <h1>What horse are you riding?</h1>
 		{{range .}}
 			<!-- <a href="/riding/{{.Id}}">Start ride on {{.Name}}</a> -->
-			<form method="POST" action="/riding">
+			<form method="POST" action="/startride">
 				<input type="hidden" name="id" value="{{.Id}}"></input>
         <input type="submit" value="Start ride on {{.Name}}">
       </form>
