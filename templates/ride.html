@@ -6,5 +6,15 @@
 </head>
 <body>
     <h1>Let's ride!</h1>
+    <a href="/">Back Home</a>
+
+    <h1>What horse are you riding?</h1>
+		{{range .}}
+			<!-- <a href="/riding/{{.Id}}">Start ride on {{.Name}}</a> -->
+			<form method="POST" action="/riding">
+				<input type="hidden" name="id" value="{{.Id}}"></input>
+        <input type="submit" value="Start ride on {{.Name}}">
+      </form>
+		{{end}}
 </body>
 </html>
