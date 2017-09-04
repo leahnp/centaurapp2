@@ -9,5 +9,13 @@
     <a href="/ride">Start Ride</a>
     <a href="/newHorse">Add a horse</a>
     <!-- list "your horses" -->
+    <h2>Your horses:</h2>
+		{{range .}}
+			<!-- <a href="/riding/{{.Id}}">Start ride on {{.Name}}</a> -->
+			<form method="GET" action="/horseSummary">
+				<input type="hidden" name="id" value="{{.Id}}"></input>
+       	<input type="submit" value="See {{.Name}}'s profile"></input>
+      </form>
+		{{end}}
 </body>
 </html>

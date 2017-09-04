@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Centaur: Ride</title>
+		<style>
+		table, th, td {
+		    border: 1px solid black;
+		    border-collapse: collapse;
+		}
+		</style>
+</head>
+<body>
+  <h1>Horse Summary</h1>
+  <a href="/">Back Home</a>
+
+  <h2>Your Rides</h2>
+	<table style="width:50%">
+	  <tr>
+	    <th>Date of ride</th>
+	    <th>Duration</th> 
+	  </tr>
+	    {{range .}}
+			  <tr>
+					<!-- <li>"{{.Id}}"</li> -->
+					<td>{{.Prettydate}}</td>
+					<td>{{.Duration}}</td>
+			  </tr>
+			{{end}}
+	</table>
+</body>
+</html>

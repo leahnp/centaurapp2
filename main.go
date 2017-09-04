@@ -3,6 +3,7 @@ import (
 	"net/http"
 	// "io"
 	"html/template"
+	"encoding/json"
 	// "text/template"
 	"database/sql"
 	"html"
@@ -15,9 +16,35 @@ import (
 import _ "github.com/go-sql-driver/mysql"
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	// io.WriteString(w, "Welcome to the barn!")
+	// get horses you can ride (currently all horses)
+	rows, err := db.Query("SELECT * FROM Horses")
+	if err != nil {
+	        fmt.Printf("error: %s", err)
+	}
+	defer rows.Close()
+
+	// struc for horse info
+	type Horse struct {
+		Id int
+		Name string
+	}
+	
+	// list of horses from DB
+	type HorseList []Horse
+	var myhorselist HorseList
+	for rows.Next() {
+    var id int
+    var name string
+    var age int
+    if err := rows.Scan(&id, &name, &age); err != nil {
+      fmt.Printf("error: %s\n", err)
+    }
+    myhorselist = append(myhorselist, Horse{id, name})
+
+	}
+
 	t, _ := template.ParseFiles("templates/index.html")
-	t.Execute(w, nil)
+	t.Execute(w, myhorselist)
 }
 
 func rideHandler(w http.ResponseWriter, r *http.Request) {
@@ -56,6 +83,14 @@ func rideHandler(w http.ResponseWriter, r *http.Request) {
 	t, _ := template.ParseFiles("templates/ride.html")
 	t.Execute(w, myhorselist)
 }
+
+
+
+
+
+
+
+
 
 func startRideHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
@@ -96,10 +131,22 @@ func stopRideHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/rideSummary?ride_id=%d", ride_idstr), 301)
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 func rideSummaryHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	ride_id := r.FormValue("ride_id")
-	fmt.Printf("ride id? %v", r)
 
 	ride_idint, _ := strconv.Atoi(ride_id)
 	// get total ride duration
@@ -144,12 +191,7 @@ func newHorseHandler(w http.ResponseWriter, r *http.Request) {
 	horseName := html.EscapeString(r.FormValue("horseName"))
 	fmt.Printf("%s\n\n\n", horseName)
 
-	// var user string
-	// _, err = db.Exec("INSERT INTO users(username, password) VALUES(?, ?)", username, hashedPassword)
-
 	_, err = db.Exec("INSERT INTO horses(Name) VALUES(?)", horseName)
-										// INSERT INTO centaur (horse) VALUES ('$horse');
-	fmt.Printf("guy")
 	if err != nil {
 		fmt.Print("Error: %v", err)
 		http.Error(w, "Insert error, unable to add horse.", 500)
@@ -165,6 +207,88 @@ func ridingHandler(w http.ResponseWriter, r *http.Request) {
 
 	t, _ := template.ParseFiles("templates/riding.html")
 	t.Execute(w, ride_id)
+}
+
+func horseSummaryHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	horse_id := r.FormValue("id")
+	// horse_idstr, _ := strconv.Atoi(horse_id)
+
+	//select all rides for horse and return date
+	// SELECT starttime FROM rides WHERE horse_id=1;
+	rows, err := db.Query("SELECT * FROM rides WHERE horse_id=?", horse_id)
+	if err != nil {
+	  fmt.Printf("error: %s", err)
+	}
+	defer rows.Close()
+	// struc for horse info
+	type Ride struct {
+		Id int
+		Prettydate string
+		Duration time.Duration
+	}
+	
+	// list of horses from DB
+	type RideList []Ride
+	var myridelist RideList
+	for rows.Next() {
+		var id int
+		var starttime time.Time
+		var stoptime time.Time
+    if err := rows.Scan(&id, &horse_id, &starttime, &stoptime); err != nil {
+      fmt.Printf("error: %s\n", err)
+    }
+
+		// idstr, _ := strconv.Atoi(id)
+		// get total ride duration
+		ride_duration := rideDuration(id)
+    fmt.Printf("RUGS: %v", ride_duration)
+    myridelist = append(myridelist, Ride{id, fmt.Sprintf(starttime.Format("Mon Jan _2 15:04:05 2006")), ride_duration})
+	}
+
+	fmt.Printf("BLUE: %v\n", myridelist)
+
+	t, _ := template.ParseFiles("templates/horseSummary.html")
+	t.Execute(w, myridelist)	
+
+}
+
+type ride struct {
+	Motion [][]float32
+	Horse_id int
+	Start_time int
+	Stop_time int
+}
+
+	// r.ParseForm()
+	// ride_id := r.FormValue("ride_id")
+	// ride_idstr, _ := strconv.Atoi(ride_id)
+
+	// // // add stoptime to ride_id
+	// _, err := db.Exec("UPDATE rides SET stoptime=NOW() WHERE id=?", ride_id)
+	// if err != nil {
+	// 	fmt.Print("Error: %v", err)
+	// 	http.Error(w, "Insert error, unable to add starttime.", 500)
+	// 	return
+	// }
+	// http.Redirect(w, r, fmt.Sprintf("/rideSummary?ride_id=%d", ride_idstr), 301)
+
+// test pass
+func uploadDataHandler(w http.ResponseWriter, r *http.Request) {
+  decoder := json.NewDecoder(r.Body)
+  var my_ride ride
+  err := decoder.Decode(&my_ride)
+  if err != nil {
+      panic(err)
+  }
+  defer r.Body.Close()
+
+  fmt.Printf("YEPPERS: %s, %d, %d, %d\n", my_ride.Motion, my_ride.Horse_id, my_ride.Start_time, my_ride.Stop_time)
+  // alright put this in the rides table right meow....
+
+
+	t, _ := template.ParseFiles("templates/rideSummary.html")
+	t.Execute(w, nil)
 }
 
 
@@ -189,5 +313,7 @@ func main() {
 	http.HandleFunc("/riding", ridingHandler)
 	http.HandleFunc("/stopRide", stopRideHandler)
 	http.HandleFunc("/rideSummary", rideSummaryHandler)
+	http.HandleFunc("/horseSummary", horseSummaryHandler)
+	http.HandleFunc("/upload_data", uploadDataHandler)
 	http.ListenAndServe(":8080", nil)
 }
