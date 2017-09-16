@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>Centaur: Ride</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 </head>
 <body>
     <h1>Let's ride!</h1>
     <a href="/">Back Home</a>
-    {{range .}}
+<!--     {{range .}}
       <div id="content">
         <h1>Capture Motion</h1>
         <button class="record" data-type="general">Start recording general on {{.Name}}</button>
@@ -19,87 +18,14 @@
         <br>
         <button class="record" data-type="canter">Start recording canter on {{.Name}}</button>
       </div>
-    {{end}}
+    {{end}} -->
 
-<!--     <h1>What horse are you riding?</h1>
-		{{range .}}
-			<form method="POST" action="/startride">
-				<input type="hidden" name="id" value="{{.Id}}"></input>
+    <h1>What horse are you riding?</h1>
+        {{range .}}
+            <form method="POST" action="/startride">
+                <input type="hidden" name="id" value="{{.Id}}"></input>
                 <input type="submit" value="Start ride on {{.Name}}"></input>
             </form>
-		{{end}} -->
-
-<script type="text/javascript">
-      var recording = false;
-      var captureType = null;
-      var captureData = null;
-      var startTime = null;
-      var stopTime = null;
-      var horseId = null;
-
-      $(document).ready(function () {
-        $(".record").click(function (event) {
-          var el = $(this);
-          toggleRecording(el);
-        });
-      });
-
-      function toggleRecording(el) {
-        captureType = el.data('type');
-
-        if (recording) {
-          // stop recording
-          recording = false;
-          stopTime = Date.now();
-
-          // set button text
-          el.text("Start recording");
-
-          // post captured data to server
-          $.ajax({
-            method: "POST",
-            url: "/upload_data",
-            data: JSON.stringify({
-              // Motion: captureData
-              Motion: [[1111.99, 32.32, 43.43, 55.55], [1111.99, 32.32, 43.43, 55.55], [1111.99, 32.32, 43.43, 55.55]],
-              Horse_id: 1,
-              Start_time: startTime,
-              Stop_time: stopTime
-            }),
-            contentType: "application/json",
-            error: function(xhr, status, err) {
-              alert(xhr)
-              alert(status)
-              alert(err)
-            },
-            success: function(data) {
-              // reset captureData for next run
-              alert('success!')
-              console.log(data)
-              captureData = [];
-              window.location.reload();
-            }
-          });
-
-          window.ondevicemotion = undefined;
-        } else {
-          // start recording
-          recording = true;
-          startTime = Date.now();
-          captureData = [];
-
-          // set button text
-          el.text("Stop recording");
-
-          // start receiving motion events from browser
-          window.ondevicemotion = capture;
-        }
-      }
-
-      function capture(e) {
-        captureData.push([e.timeStamp, e.acceleration.x, e.acceleration.y, e.acceleration.z])
-      }
-
-    </script>
+        {{end}}
 </body>
 </html>

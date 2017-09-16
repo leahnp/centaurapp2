@@ -1,17 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
+<body onload="pageLoad()">
 <head>
     <meta charset="UTF-8">
     <title>Centaur: Ride</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
 </head>
 <body>
     <h1>You are riding</h1>
     <a href="/">Back Home</a>
     <!-- <a href="/stopRide">Stop Ride</a> -->
-    <form method="POST" action="/stopRide">
+<!--     <form method="POST" action="/stopRide">
         <input type="hidden" name="ride_id" value="{{ .}}"></input>
         <input type="submit" value="Stop ride">
-      </form>
-    <h2>Ride id: {{ .}}</h2>
+      </form> -->
+    <!-- <h2>Ride id: {{ .}}</h2> -->
+    <button class="record" data-type="canter">Stop ride #: {{ .}}</button>
+
+<script type="text/javascript">
+      var recording = true;
+      // var captureType = null;
+      var captureData = null;
+      var rideId = {{ .}};
+
+      $(document).ready(function () {
+        $(".record").click(function (event) {
+          var el = $(this);
+          stopRide(el);
+        });
+      });
+
+      function stopRide(el) {
+          recording = false;
+          // set button text
+          var test = "test";
+          el.text("Start recording");
+          window.ondevicemotion = undefined;
+          $.ajax({
+            method: "POST",
+            url: `/stopRide?${rideId}`,
+            data: JSON.stringify(test),
+            contentType: "application/json",
+            error: function(xhr, status, err) {
+              // alert(xhr)
+              console.log(xhr)
+              // alert(status)
+              console.log(status)
+              // alert(err)
+              console.log(err)
+            },
+            success: function(data) {
+              // reset captureData for next run
+              // alert('success!')
+              console.log(data)
+              // window.location.reload();
+              window.location.href = `/rideSummary?${rideId}`; 
+            }
+          });
+      }
+
+      // function startCapture() {
+      //   captureData = [];
+      //   // start receiving motion events from browser
+      //   window.ondevicemotion = capture;
+
+      // }
+
+      function sendData(data) {
+          $.ajax({
+            method: "POST",
+            url: `/upload_data?${rideId}`,
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            error: function(xhr, status, err) {
+              // alert(xhr)
+              console.log(xhr)
+              // alert(status)
+              console.log(status)
+              // alert(err)
+              console.log(err)
+            },
+            success: function(data) {
+              // reset captureData for next run
+              // alert('success!')
+              console.log(data)
+              // window.location.reload();
+            }
+          });
+        }
+
+      function capture(e) {
+        captureData.push({
+          TimeStamp: e.timeStamp,
+          AccelX: e.acceleration.x,
+          AccelY: e.acceleration.y,
+          AccelZ: e.acceleration.z
+        });
+        // check if data len is 10 here, if is post data to database
+        if (captureData.length > 10) {
+            sendData(captureData);
+            captureData = [];
+        }
+      }
+
+      function generateFakeEvent() {
+        if (recording == true) {
+          capture({ timeStamp: 1000, acceleration: { x: 1234.23423, y: 2765.3453, z: 3.0144444 }});
+          setTimeout(generateFakeEvent, 100);
+          }
+        }
+
+
+  
+        function pageLoad() {
+            captureData = [];
+            // // start receiving motion events from browser
+            // // window.ondevicemotion = capture;
+            generateFakeEvent();
+        }
+
+    </script>
+
+
+
+
 </body>
 </html>

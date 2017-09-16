@@ -3,7 +3,7 @@ import (
 	"net/http"
 	// "io"
 	"html/template"
-	"encoding/json"
+	//"encoding/json"
 	// "text/template"
 	"database/sql"
 	"html"
@@ -11,6 +11,7 @@ import (
 	"time"
 	"fmt"
 	"strconv"
+	"io/ioutil"
 )
 
 import _ "github.com/go-sql-driver/mysql"
@@ -84,21 +85,60 @@ func rideHandler(w http.ResponseWriter, r *http.Request) {
 	t.Execute(w, myhorselist)
 }
 
+// type motion struct {
+// 	TimeStamp float32
+// 	AccelX float32
+// 	AccelY float32
+// 	AccelZ float32
+// }
+
+// type ride struct {
+// 	Motion []motion
+// 	// Motion []map[string]float32
+// 	Ride_id int
+// }
+// [e.timeStamp, e.accelx, e.accely, e.accelz]
 
 
+// test pass
+func uploadDataHandler(w http.ResponseWriter, r *http.Request) {
+  ride_id := r.URL.RawQuery;
+
+  body_bytes, _ := ioutil.ReadAll(r.Body)
+  body_str := string(body_bytes)
+
+  /*decoder := json.NewDecoder(r.Body)
+  var my_ride ride
+  err := decoder.Decode(&my_ride)
+  if err != nil {
+      panic(err)
+  }
+  defer r.Body.Close()*/
+  defer r.Body.Close()
+
+  fmt.Printf("YEPPERS (%d): %s\n", ride_id, body_str)
+  // alright put this in the rides table right meow....
+
+	_, err2 := db.Exec("UPDATE rides SET motion=JSON_MERGE(motion, ?) WHERE id=?", body_str, ride_id)
+	if err2 != nil {
+		fmt.Print("Errorhere: %v", err2)
+		http.Error(w, "Insert error, unable to add starttime.", 500)
+		return
+	}
 
 
-
-
-
+	// t, _ := template.ParseFiles("templates/rideSummary.html")
+	// t.Execute(w, nil)
+}
 
 func startRideHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Printf("Eh?")
 	r.ParseForm()
 	horse_id := r.FormValue("id")
 	// horse_idstr, _ := strconv.Atoi(horse_id)
 
 	// add horse id and starttime to new ride entry
-	result, err := db.Exec("INSERT INTO rides(starttime, horse_id) VALUES(NOW(), ?)", horse_id)
+	result, err := db.Exec("INSERT INTO rides(horse_id, starttime, motion) VALUES(?, NOW(), '[]')", horse_id)
 	if err != nil {
 		fmt.Print("Error: %v", err)
 		http.Error(w, "Insert error, unable to add starttime.", 500)
@@ -113,58 +153,49 @@ func startRideHandler(w http.ResponseWriter, r *http.Request) {
 	    println("LastInsertId:", rideId)
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("/riding?ride_id=%d", rideId), 301)
+	// http.Redirect(w, r, fmt.Sprintf("templates/riding?ride_id=%d", rideId), 301)
+	t, _ := template.ParseFiles("templates/riding.html")
+	t.Execute(w, rideId)
 }
 
 func stopRideHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	ride_id := r.FormValue("ride_id")
-	ride_idstr, _ := strconv.Atoi(ride_id)
+	fmt.Printf("poo\n")
+	ride_id := r.URL.RawQuery;
+	fmt.Printf("RIDE ID: %v\n", ride_id)
 
-	// // add stoptime to ride_id
+	// add stoptime to ride_id
 	_, err := db.Exec("UPDATE rides SET stoptime=NOW() WHERE id=?", ride_id)
 	if err != nil {
 		fmt.Print("Error: %v", err)
-		http.Error(w, "Insert error, unable to add starttime.", 500)
+		http.Error(w, "Insert error, unable to add stoptime.", 500)
 		return
 	}
-	http.Redirect(w, r, fmt.Sprintf("/rideSummary?ride_id=%d", ride_idstr), 301)
+	// http.Redirect(w, r, fmt.Sprintf("/rideSummary?ride_id=%d", ride_id), 301)
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
 func rideSummaryHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	ride_id := r.FormValue("ride_id")
-
+	ride_id := r.URL.RawQuery;
 	ride_idint, _ := strconv.Atoi(ride_id)
 	// get total ride duration
 	ride_duration := rideDuration(ride_idint)
-	fmt.Printf("RIDE DURATION: %v\n", ride_duration)
 	t, _ := template.ParseFiles("templates/rideSummary.html")
 	t.Execute(w, ride_duration)
 }
 
 func rideDuration(ride_id int) time.Duration {
 	// query db and get starttime and stoptime for ride
+	fmt.Printf("poop %v", ride_id)
 	rows, err := db.Query("SELECT starttime, stoptime FROM rides WHERE id=?", ride_id)
 	if err != nil {
 	  fmt.Printf("error: %s", err)
 	}
 	defer rows.Close()
 	var delta time.Duration
+	fmt.Printf("EH? %v", rows)
 	for rows.Next() {
+		fmt.Printf("bahhhh\n")
     var starttime time.Time
     var stoptime time.Time
 
@@ -172,6 +203,7 @@ func rideDuration(ride_id int) time.Duration {
       fmt.Printf("error: %s\n", err)
     }
     // get ride duration
+    fmt.Printf("Start %v, stop %v", starttime, stoptime)
     delta = stoptime.Sub(starttime)
 	}
   return delta
@@ -253,43 +285,6 @@ func horseSummaryHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-type ride struct {
-	Motion [][]float32
-	Horse_id int
-	Start_time int
-	Stop_time int
-}
-
-	// r.ParseForm()
-	// ride_id := r.FormValue("ride_id")
-	// ride_idstr, _ := strconv.Atoi(ride_id)
-
-	// // // add stoptime to ride_id
-	// _, err := db.Exec("UPDATE rides SET stoptime=NOW() WHERE id=?", ride_id)
-	// if err != nil {
-	// 	fmt.Print("Error: %v", err)
-	// 	http.Error(w, "Insert error, unable to add starttime.", 500)
-	// 	return
-	// }
-	// http.Redirect(w, r, fmt.Sprintf("/rideSummary?ride_id=%d", ride_idstr), 301)
-
-// test pass
-func uploadDataHandler(w http.ResponseWriter, r *http.Request) {
-  decoder := json.NewDecoder(r.Body)
-  var my_ride ride
-  err := decoder.Decode(&my_ride)
-  if err != nil {
-      panic(err)
-  }
-  defer r.Body.Close()
-
-  fmt.Printf("YEPPERS: %s, %d, %d, %d\n", my_ride.Motion, my_ride.Horse_id, my_ride.Start_time, my_ride.Stop_time)
-  // alright put this in the rides table right meow....
-
-
-	t, _ := template.ParseFiles("templates/rideSummary.html")
-	t.Execute(w, nil)
-}
 
 
 func main() {
