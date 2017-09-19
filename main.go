@@ -237,19 +237,6 @@ type ride struct {
 	Stop_time  int
 }
 
-	// r.ParseForm()
-	// ride_id := r.FormValue("ride_id")
-	// ride_idstr, _ := strconv.Atoi(ride_id)
-
-	// // // add stoptime to ride_id
-	// _, err := db.Exec("UPDATE rides SET stoptime=NOW() WHERE id=?", ride_id)
-	// if err != nil {
-	// 	fmt.Print("Error: %v", err)
-	// 	http.Error(w, "Insert error, unable to add starttime.", 500)
-	// 	return
-	// }
-	// http.Redirect(w, r, fmt.Sprintf("/rideSummary?ride_id=%d", ride_idstr), 301)
-
 // test pass
 func uploadDataHandler(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
