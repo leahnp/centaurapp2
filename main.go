@@ -267,7 +267,8 @@ func horseSummaryHandler(w http.ResponseWriter, r *http.Request) {
 		var id int
 		var starttime time.Time
 		var stoptime time.Time
-    if err := rows.Scan(&id, &horse_id, &starttime, &stoptime); err != nil {
+		var motion string
+    if err := rows.Scan(&id, &horse_id, &starttime, &stoptime, &motion); err != nil {
       fmt.Printf("error: %s\n", err)
     }
 
