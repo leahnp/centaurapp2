@@ -6,16 +6,25 @@
 </head>
 <body>
     <h1>Welcome back to the barn.</h1>
-    <a href="/ride">Start Ride</a>
-    <a href="/newHorse">Add a horse</a>
+    <!-- <a href="/ride">Start Ride</a> -->
+    <h3>What horse are you riding?</h3>
+        {{range .}}
+            <form method="POST" action="/startride">
+                <input type="hidden" name="id" value="{{.Id}}"></input>
+                <input type="submit" value="Start ride on {{.Name}}"></input>
+            </form>
+        {{end}}
+
     <!-- list "your horses" -->
-    <h2>Your horses:</h2>
-		{{range .}}
-			<!-- <a href="/riding/{{.Id}}">Start ride on {{.Name}}</a> -->
-			<form method="GET" action="/horseSummary">
-				<input type="hidden" name="id" value="{{.Id}}"></input>
-       	<input type="submit" value="See {{.Name}}'s profile"></input>
+    <h3>Your horses:</h3>
+    {{range .}}
+      <!-- <a href="/riding/{{.Id}}">Start ride on {{.Name}}</a> -->
+      <form method="GET" action="/horseSummary">
+        <input type="hidden" name="id" value="{{.Id}}"></input>
+        <input type="submit" value="See {{.Name}}'s profile"></input>
       </form>
-		{{end}}
+    {{end}}
+    <br><br><br>
+    <a href="/newHorse">Add a horse</a>
 </body>
 </html>
