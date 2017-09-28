@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-<body onload="pageLoad()">
 <head>
     <meta charset="UTF-8">
     <title>Centaur: Ride</title>
@@ -10,20 +9,35 @@
     <h2>You are riding</h2>
     <a href="/">Back Home</a>
     <button class="record" data-type="canter">Stop ride #: {{ .}}</button>
-    <h1><time>00:00:00</time></h1>
+    <h1><time>00:00:00</time></h1><br>
+    <button class="gait" data-type="w">WALK</button><br><br>
+    <button class="gait" data-type="t">TROT</button><br><br>
+    <button class="gait" data-type="c">CANTER</button>
+    <button class="gait" data-type="">NULL</button>
 
 <script type="text/javascript">
-      var recording = true;
-      // var captureType = null;
-      var captureData = null;
-      var rideId = {{ .}};
-
       $(document).ready(function () {
+        var recording = true;
+        // var captureType = null;
+        var captureData = null;
+        var rideId = {{ .}};
+        var gait = "";
+
+        starttimer()
+        captureData = [];
+        // // start receiving motion events from browser
+        window.ondevicemotion = capture;
+
         $(".record").click(function (event) {
           var el = $(this);
           stopRide(el);
         });
-      });
+
+        $(".gait").click(function (event) {
+          var el = $(this);
+          gait = el.data("type");
+          console.log(gait)
+        });
 
       function stopRide(el) {
           recording = false;
@@ -89,7 +103,8 @@
           TimeStamp: e.timeStamp,
           AccelX: e.acceleration.x,
           AccelY: e.acceleration.y,
-          AccelZ: e.acceleration.z
+          AccelZ: e.acceleration.z,
+          Gait: gait
         });
         // check if data len is 10 here, if is post data to database
         if (captureData.length > 10) {
@@ -98,22 +113,12 @@
         }
       }
 
-      function generateFakeEvent() {
-        if (recording == true) {
-          capture({ timeStamp: 1000, acceleration: { x: 1234.23423, y: 2765.3453, z: 3.0144444 }});
-          setTimeout(generateFakeEvent, 100);
-          }
-        }
-
-
-  
-        function pageLoad() {
-          starttimer()
-          captureData = [];
-          // // start receiving motion events from browser
-          window.ondevicemotion = capture;
-          // generateFakeEvent();
-        }
+      // function generateFakeEvent() {
+      //   if (recording == true) {
+      //     capture({ timeStamp: 1000, acceleration: { x: 1234.23423, y: 2765.3453, z: 3.0144444 }});
+      //     setTimeout(generateFakeEvent, 100);
+      //     }
+      //   }
 
 
 
@@ -140,6 +145,7 @@
         function starttimer() {
           timer();
         }
+      });
     </script>
   </body>
 </html>
